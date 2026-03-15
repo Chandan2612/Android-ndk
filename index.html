@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Android NDK & 16KB Page Size Guide</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Inter,system-ui,Arial;
+background:#0f172a;
+color:#e2e8f0;
+display:flex;
+}
+
+.sidebar{
+width:260px;
+background:#020617;
+height:100vh;
+padding:30px;
+position:fixed;
+overflow:auto;
+}
+
+.sidebar h2{
+color:#38bdf8;
+margin-bottom:20px;
+}
+
+.sidebar a{
+display:block;
+color:#94a3b8;
+text-decoration:none;
+margin:12px 0;
+font-size:15px;
+}
+
+.sidebar a:hover{
+color:white;
+}
+
+.main{
+margin-left:260px;
+padding:60px;
+max-width:1100px;
+}
+
+section{
+margin-bottom:80px;
+}
+
+h1{
+font-size:38px;
+margin-bottom:20px;
+}
+
+h2{
+color:#38bdf8;
+margin-bottom:10px;
+}
+
+.card{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+margin-top:20px;
+}
+
+.code{
+background:#020617;
+padding:18px;
+border-radius:8px;
+color:#22c55e;
+font-family:monospace;
+margin-top:10px;
+overflow:auto;
+}
+
+.diagram{
+display:flex;
+gap:15px;
+margin-top:20px;
+}
+
+.block{
+flex:1;
+background:#334155;
+padding:20px;
+border-radius:10px;
+text-align:center;
+}
+
+.page-container{
+display:flex;
+gap:10px;
+margin-top:20px;
+}
+
+.page{
+width:50px;
+height:60px;
+background:#6366f1;
+border-radius:6px;
+animation:float 2s infinite ease-in-out alternate;
+}
+
+.page:nth-child(2){animation-delay:.3s}
+.page:nth-child(3){animation-delay:.6s}
+.page:nth-child(4){animation-delay:.9s}
+
+@keyframes float{
+from{transform:translateY(0)}
+to{transform:translateY(-12px)}
+}
+
+.button{
+background:#38bdf8;
+border:none;
+padding:10px 20px;
+border-radius:6px;
+cursor:pointer;
+margin-top:15px;
+}
+
+.button:hover{
+background:#0ea5e9;
+}
+
+.simulator{
+background:#020617;
+padding:20px;
+border-radius:10px;
+margin-top:20px;
+}
+
+.result{
+margin-top:15px;
+color:#facc15;
+}
+
+details{
+margin-top:10px;
+}
+
+footer{
+text-align:center;
+margin-top:100px;
+color:#64748b;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>NDK Guide</h2>
+
+<a href="#intro">Introduction</a>
+<a href="#ndk">What is NDK</a>
+<a href="#native">Native Libraries</a>
+<a href="#pages">Memory Pages</a>
+<a href="#problem">4KB vs 16KB Issue</a>
+<a href="#flutter">Flutter Impact</a>
+<a href="#fix">How to Fix</a>
+<a href="#advanced">Advanced Internals</a>
+<a href="#sim">Page Size Simulator</a>
+
+</div>
+
+
+<div class="main">
+
+<section id="intro">
+
+<h1>Android NDK & 16KB Page Size</h1>
+
+<p>
+Complete explanation of the Android native development system and the recent
+4KB → 16KB memory page transition.
+</p>
+
+</section>
+
+
+<section id="ndk">
+
+<h2>What is Android NDK</h2>
+
+<div class="card">
+
+<p>
+NDK stands for <b>Native Development Kit</b>.
+It allows Android apps to run <b>C and C++ code</b>.
+</p>
+
+<p>
+Most Android apps use:
+</p>
+
+<ul>
+<li>Kotlin</li>
+<li>Java</li>
+<li>Flutter (Dart)</li>
+</ul>
+
+But performance-critical code runs in native libraries.
+
+</div>
+
+</section>
+
+
+<section id="native">
+
+<h2>Native Libraries</h2>
+
+<div class="card">
+
+<p>
+Native code compiles into shared libraries called:
+</p>
+
+<div class="code">
+.so  (Shared Object)
+</div>
+
+Examples:
+
+<div class="code">
+libflutter.so
+libsqlite.so
+libopencv.so
+</div>
+
+</div>
+
+</section>
+
+
+
+<section id="pages">
+
+<h2>Memory Pages</h2>
+
+<div class="card">
+
+<p>
+Operating systems divide RAM into fixed-size blocks called pages.
+</p>
+
+<div class="diagram">
+
+<div class="block">
+4KB Page
+Old Android devices
+</div>
+
+<div class="block">
+16KB Page
+New ARM devices
+</div>
+
+</div>
+
+<div class="page-container">
+
+<div class="page"></div>
+<div class="page"></div>
+<div class="page"></div>
+<div class="page"></div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<section id="problem">
+
+<h2>The 4KB vs 16KB Problem</h2>
+
+<div class="card">
+
+<p>
+Old native libraries were compiled assuming <b>4KB page alignment</b>.
+</p>
+
+<p>
+New Android devices can use <b>16KB pages</b>.
+</p>
+
+When the loader tries to map the library → crash.
+
+<div class="code">
+dlopen failed: unsupported page size
+</div>
+
+</div>
+
+</section>
+
+
+
+<section id="flutter">
+
+<h2>Flutter Impact</h2>
+
+<div class="card">
+
+Flutter apps include native libraries like:
+
+<div class="code">
+libflutter.so
+libapp.so
+</div>
+
+If compiled using older NDK versions they only support **4KB pages**.
+
+</div>
+
+</section>
+
+
+
+<section id="fix">
+
+<h2>How to Fix the Issue</h2>
+
+<div class="card">
+
+Use modern NDK:
+
+<div class="code">
+NDK r26+
+</div>
+
+Rebuild libraries.
+
+Flutter developers should run:
+
+<div class="code">
+flutter clean
+flutter build apk
+</div>
+
+</div>
+
+</section>
+
+
+
+<section id="advanced">
+
+<h2>Advanced Internals</h2>
+
+<div class="card">
+
+Native libraries follow **ELF format**.
+
+<div class="code">
+ELF Header
+Program Header
+Section Header
+Machine Code
+</div>
+
+The program header defines:
+
+<div class="code">
+p_align
+</div>
+
+This value controls memory page alignment.
+
+</div>
+
+<details>
+
+<summary>Deep System Explanation</summary>
+
+<p>
+Android's dynamic linker maps native libraries into memory using mmap().
+If the binary alignment doesn't match the system page size, mapping fails.
+</p>
+
+</details>
+
+</section>
+
+
+
+<section id="sim">
+
+<h2>Page Size Simulator</h2>
+
+<div class="simulator">
+
+<p>Select library alignment:</p>
+
+<select id="align">
+
+<option value="4">4KB</option>
+<option value="16">16KB</option>
+
+</select>
+
+<button class="button" onclick="simulate()">Run Simulation</button>
+
+<div class="result" id="result"></div>
+
+</div>
+
+</section>
+
+
+<footer>
+
+Android Native Development • Memory Architecture • Flutter Compatibility
+
+</footer>
+
+
+</div>
+
+
+<script>
+
+function simulate(){
+
+const align=document.getElementById("align").value
+
+let text=""
+
+if(align==4){
+
+text="⚠ Library built for 4KB pages may crash on 16KB devices"
+
+}else{
+
+text="✔ Compatible with modern Android devices"
+
+}
+
+document.getElementById("result").innerText=text
+
+}
+
+</script>
+
+
+</body>
+</html>
