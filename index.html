@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -451,6 +451,409 @@ text="✔ Compatible with modern Android devices"
 }
 
 document.getElementById("result").innerText=text
+
+}
+
+</script>
+
+
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Android NDK Deep Guide</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Inter, sans-serif;
+background:#0f172a;
+color:#e2e8f0;
+display:flex;
+}
+
+.sidebar{
+width:260px;
+background:#020617;
+height:100vh;
+overflow:auto;
+padding:25px;
+position:fixed;
+}
+
+.sidebar h2{
+color:#38bdf8;
+margin-bottom:20px;
+}
+
+.sidebar input{
+width:100%;
+padding:8px;
+border-radius:6px;
+border:none;
+margin-bottom:20px;
+}
+
+.sidebar a{
+display:block;
+color:#94a3b8;
+text-decoration:none;
+margin:10px 0;
+}
+
+.sidebar a:hover{
+color:white;
+}
+
+.main{
+margin-left:260px;
+padding:60px;
+max-width:1100px;
+}
+
+h1{
+font-size:40px;
+margin-bottom:20px;
+}
+
+h2{
+color:#38bdf8;
+margin-top:40px;
+}
+
+.card{
+background:#1e293b;
+padding:30px;
+border-radius:10px;
+margin-top:20px;
+}
+
+.code{
+background:#020617;
+padding:16px;
+border-radius:8px;
+font-family:monospace;
+color:#22c55e;
+margin-top:15px;
+overflow:auto;
+}
+
+.diagram{
+display:flex;
+gap:20px;
+margin-top:20px;
+}
+
+.block{
+flex:1;
+padding:20px;
+background:#334155;
+border-radius:10px;
+text-align:center;
+}
+
+.memory{
+display:flex;
+gap:6px;
+margin-top:20px;
+}
+
+.page{
+width:40px;
+height:60px;
+background:#6366f1;
+border-radius:5px;
+animation:float 2s infinite alternate;
+}
+
+.page:nth-child(2){animation-delay:.3s}
+.page:nth-child(3){animation-delay:.6s}
+.page:nth-child(4){animation-delay:.9s}
+
+@keyframes float{
+from{transform:translateY(0)}
+to{transform:translateY(-10px)}
+}
+
+.simulator{
+background:#020617;
+padding:20px;
+border-radius:10px;
+margin-top:20px;
+}
+
+button{
+padding:10px 20px;
+border:none;
+background:#38bdf8;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#0ea5e9;
+}
+
+.result{
+margin-top:10px;
+color:#facc15;
+}
+
+.elf-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-top:20px;
+}
+
+.elf-box{
+background:#334155;
+padding:15px;
+border-radius:6px;
+text-align:center;
+}
+
+footer{
+margin-top:100px;
+text-align:center;
+color:#64748b;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="sidebar">
+
+<h2>NDK Docs</h2>
+
+<input type="text" placeholder="Search docs...">
+
+<a href="#intro">Introduction</a>
+<a href="#ndk">NDK</a>
+<a href="#native">Native Libraries</a>
+<a href="#memory">Memory Pages</a>
+<a href="#problem">4KB vs 16KB</a>
+<a href="#flutter">Flutter Impact</a>
+<a href="#fix">Fix</a>
+<a href="#elf">ELF Format</a>
+<a href="#sim">Simulator</a>
+
+</div>
+
+
+<div class="main">
+
+<h1>Android NDK & 16KB Page Size</h1>
+
+<p>
+A complete technical explanation of Android native development and
+memory page compatibility.
+</p>
+
+
+<h2 id="ndk">What is Android NDK</h2>
+
+<div class="card">
+
+<p>
+NDK stands for <b>Native Development Kit</b>.
+It allows Android applications to run <b>C/C++ native code</b>.
+</p>
+
+<div class="diagram">
+
+<div class="block">
+Flutter / Kotlin / Java
+</div>
+
+<div class="block">
+JNI Bridge
+</div>
+
+<div class="block">
+Native Libraries (.so)
+</div>
+
+</div>
+
+</div>
+
+
+<h2 id="native">Native Libraries</h2>
+
+<div class="card">
+
+Native code compiles into shared objects.
+
+<div class="code">
+
+libflutter.so
+libsqlite.so
+libopencv.so
+
+</div>
+
+</div>
+
+
+<h2 id="memory">Memory Pages</h2>
+
+<div class="card">
+
+Operating systems divide RAM into fixed blocks called **pages**.
+
+<div class="diagram">
+
+<div class="block">
+4KB Pages
+Old Android
+</div>
+
+<div class="block">
+16KB Pages
+New ARM Devices
+</div>
+
+</div>
+
+<div class="memory">
+
+<div class="page"></div>
+<div class="page"></div>
+<div class="page"></div>
+<div class="page"></div>
+
+</div>
+
+</div>
+
+
+<h2 id="problem">The 4KB vs 16KB Issue</h2>
+
+<div class="card">
+
+Older native libraries were compiled assuming **4KB page alignment**.
+
+New Android devices support **16KB pages**.
+
+If alignment does not match:
+
+<div class="code">
+dlopen failed: unsupported page size
+</div>
+
+</div>
+
+
+<h2 id="flutter">Flutter Impact</h2>
+
+<div class="card">
+
+Flutter apps bundle native libraries:
+
+<div class="code">
+libflutter.so
+libapp.so
+</div>
+
+Older Flutter builds used outdated NDK versions.
+
+</div>
+
+
+<h2 id="fix">How to Fix</h2>
+
+<div class="card">
+
+Use modern NDK.
+
+<div class="code">
+NDK r26+
+</div>
+
+Flutter rebuild steps:
+
+<div class="code">
+flutter clean
+flutter build apk
+</div>
+
+</div>
+
+
+<h2 id="elf">ELF Structure</h2>
+
+<div class="card">
+
+Native libraries follow **ELF binary format**.
+
+<div class="elf-grid">
+
+<div class="elf-box">ELF Header</div>
+<div class="elf-box">Program Header</div>
+<div class="elf-box">Section Header</div>
+<div class="elf-box">Machine Code</div>
+
+</div>
+
+</div>
+
+
+<h2 id="sim">Page Size Simulator</h2>
+
+<div class="simulator">
+
+<select id="align">
+
+<option value="4">Library built for 4KB</option>
+<option value="16">Library built for 16KB</option>
+
+</select>
+
+<button onclick="simulate()">Check Compatibility</button>
+
+<div class="result" id="result"></div>
+
+</div>
+
+
+<footer>
+
+Android Native Development Guide
+NDK • ELF • Memory Architecture
+
+</footer>
+
+</div>
+
+
+<script>
+
+function simulate(){
+
+let value=document.getElementById("align").value
+
+let result=""
+
+if(value==4){
+result="⚠ May crash on 16KB page size devices"
+}else{
+result="✔ Compatible with modern Android devices"
+}
+
+document.getElementById("result").innerText=result
 
 }
 
